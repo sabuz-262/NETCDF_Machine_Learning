@@ -6,7 +6,6 @@ import Constants
 import xarray as xr
 import sklearn.cluster
 import pandas
-from scipy.spatial.distance import pdist
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -23,7 +22,6 @@ def apply_k_means(data, K):
     km = sklearn.cluster.KMeans(n_clusters=K)
     km.fit(data_values)
     clusters = km.fit_predict(data_values)
-    labels = km.labels_
     centroids = km.cluster_centers_
     distances = []
     for i, (cx, cy, ca, cb) in enumerate(centroids):
@@ -31,6 +29,14 @@ def apply_k_means(data, K):
         distances.append(mean_distance)
     return np.array(distances).mean()
 
+
+def apply_k_means_with_elbw_point(data, K):
+    data_values = data.values
+    km = sklearn.cluster.KMeans(n_clusters=K)
+    km.fit(data_values)
+    labels = km.labels_
+    results = pandas.DataFrame([data.index, labels]).T
+    return results
 
 def find_K(dataframe):
     K_array = []
@@ -89,11 +95,10 @@ def main():
 
 
     dataframe = rename_column(dataframe)
-    #print(dataframe)
     store_data(dataframe)
-    #dataframe = read_cdf_file(Constants.output_file_name)
-    #print(dataframe)
-    find_K(dataframe)
+    #find_K(dataframe)
+    results = apply_k_means_with_elbw_point(dataframe, 20)
+    results.to_csv("result.csv")
 
 if __name__ == '__main__':
     main()
