@@ -4,6 +4,7 @@ import sklearn.cluster
 import pandas
 from scipy.spatial.distance import pdist
 
+
 def apply_k_means(data, K):
     mat = data.values
     mat[0][3] = 0
@@ -15,6 +16,8 @@ def apply_k_means(data, K):
     dists = pdist(centroids, metric='euclidean')
     results = pandas.DataFrame([data.index, labels]).T
     return dists, results
+
+
 
 
 def store_data(dataframe):
@@ -32,6 +35,7 @@ def rename_column(dataframe):
     #calcualte the derivative of temperature
     resampled_data[Constants.temperature_derivative] = (resampled_data[Constants.new_temp_name].shift(-1) - resampled_data[Constants.new_temp_name].shift(1)) / 2
 
+    return resampled_data
 
 def read_cdf_file(filename):
     dataset = xr.open_dataset(filename)
@@ -49,8 +53,11 @@ def main():
             dataframe = dataframe.append(df)
 
 
+    dataframe = rename_column(dataframe)
+    #print(dataframe)
+    store_data(dataframe)
+    dataframe = read_cdf_file(Constants.output_file_name)
     print(dataframe)
-
 
 if __name__ == '__main__':
     main()
