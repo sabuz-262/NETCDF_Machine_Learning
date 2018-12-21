@@ -37,7 +37,7 @@ def find_K(dataframe):
     plt.plot(K_array, distance_array)
     plt.legend(loc='best')
     plt.xlabel("K(numebr of clusters)")
-    plt.ylabel("WCSS")
+    plt.ylabel("Inertia")
     #plt.show()
     plt.savefig('./elbow_point.pdf', bbox_inches='tight')
     plt.close()
