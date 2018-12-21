@@ -1,22 +1,53 @@
+from sys import platform as sys_pf
+if sys_pf == 'darwin':
+    import matplotlib
+    matplotlib.use("TkAgg")
 import Constants
 import xarray as xr
 import sklearn.cluster
 import pandas
 from scipy.spatial.distance import pdist
 import numpy as np
+import matplotlib.pyplot as plt
+
+
+
+# Acerage distance of data points to cluster centriods
+def k_mean_distance(data, cx, cy, ca, cb, i_centroid, cluster_labels):
+    distances = [np.sqrt((x - cx) ** 2 + (y - cy) ** 2 + (a - ca) ** 2 + (b - cb) ** 2 ) for (x, y, a, b) in data[cluster_labels == i_centroid]]
+    return np.array(distances).mean()
 
 
 def apply_k_means(data, K):
-    mat = data.values
+    data_values = data.values
     km = sklearn.cluster.KMeans(n_clusters=K)
-    km.fit(mat)
+    km.fit(data_values)
+    clusters = km.fit_predict(data_values)
     labels = km.labels_
     centroids = km.cluster_centers_
-    dists = pdist(centroids, metric='euclidean')
-    results = pandas.DataFrame([data.index, labels]).T
-    return dists, results
+    distances = []
+    for i, (cx, cy, ca, cb) in enumerate(centroids):
+        mean_distance = k_mean_distance(data_values, cx, cy, ca, cb, i, clusters)
+        distances.append(mean_distance)
+    return np.array(distances).mean()
 
 
+def find_K(dataframe):
+    K_array = []
+    distance_array = []
+    for i in range(2,100,1):
+        distance = apply_k_means(dataframe, i)
+        K_array.append(i)
+        distance_array.append(distance)
+    print(K_array)
+    print(distance_array)
+    plt.plot(K_array, distance_array)
+    plt.legend(loc='best')
+    plt.xlabel("K(numebr of clusters)")
+    plt.ylabel("Average within cluster distance to centroid")
+    #plt.show()
+    plt.savefig('./elbow_point.pdf', bbox_inches='tight')
+    plt.close()
 
 
 def store_data(dataframe):
@@ -60,8 +91,9 @@ def main():
     dataframe = rename_column(dataframe)
     #print(dataframe)
     store_data(dataframe)
-    dataframe = read_cdf_file(Constants.output_file_name)
-    print(dataframe)
+    #dataframe = read_cdf_file(Constants.output_file_name)
+    #print(dataframe)
+    find_K(dataframe)
 
 if __name__ == '__main__':
     main()
