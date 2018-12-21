@@ -3,12 +3,11 @@ import xarray as xr
 import sklearn.cluster
 import pandas
 from scipy.spatial.distance import pdist
+import numpy as np
 
 
 def apply_k_means(data, K):
     mat = data.values
-    mat[0][3] = 0
-    mat[-1][3] = 0
     km = sklearn.cluster.KMeans(n_clusters=K)
     km.fit(mat)
     labels = km.labels_
@@ -33,7 +32,12 @@ def rename_column(dataframe):
     resampled_all_data = dataframe.resample('5T')
     resampled_data = resampled_all_data[[Constants.new_atm_pressure_name, Constants.new_rh_name, Constants.new_temp_name]].mean()
     #calcualte the derivative of temperature
-    resampled_data[Constants.temperature_derivative] = (resampled_data[Constants.new_temp_name].shift(-1) - resampled_data[Constants.new_temp_name].shift(1)) / 2
+
+    #resampled_data[Constants.temperature_derivative] = (resampled_data[Constants.new_temp_name].shift(-1) - resampled_data[Constants.new_temp_name].shift(1)) / 2
+
+    temprature_data = resampled_data[Constants.new_temp_name]
+    resampled_data[Constants.temperature_derivative] = pandas.Series(np.gradient(temprature_data.values), temprature_data.index)
+
 
     return resampled_data
 
