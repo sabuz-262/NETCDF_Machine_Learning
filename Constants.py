@@ -13,3 +13,8 @@ old_temp_name = 'temp_mean'
 new_temp_name = 'mean_temperature'
 
 temperature_derivative = 'temperature_derivatives'
+total_number_file = 10
+
+highest_K = 30
+
+resample_time = '5T'
