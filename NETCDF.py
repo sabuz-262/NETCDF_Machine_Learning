@@ -4,35 +4,22 @@ if sys_pf == 'darwin':
     matplotlib.use("TkAgg")
 import Constants
 import xarray as xr
-import sklearn.cluster
+from sklearn.cluster import KMeans
 import pandas
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-
-# Acerage distance of data points to cluster centriods
-def k_mean_distance(data, cx, cy, ca, cb, i_centroid, cluster_labels):
-    distances = [np.sqrt((x - cx) ** 2 + (y - cy) ** 2 + (a - ca) ** 2 + (b - cb) ** 2 ) for (x, y, a, b) in data[cluster_labels == i_centroid]]
-    return np.array(distances).mean()
-
-
 def apply_k_means(data, K):
     data_values = data.values
-    km = sklearn.cluster.KMeans(n_clusters=K)
+    km = KMeans(n_clusters=K)
     km.fit(data_values)
-    clusters = km.fit_predict(data_values)
-    centroids = km.cluster_centers_
-    distances = []
-    for i, (cx, cy, ca, cb) in enumerate(centroids):
-        mean_distance = k_mean_distance(data_values, cx, cy, ca, cb, i, clusters)
-        distances.append(mean_distance)
-    return np.array(distances).mean()
+    return km.inertia_
 
 
 def apply_k_means_with_elbw_point(data, K):
     data_values = data.values
-    km = sklearn.cluster.KMeans(n_clusters=K)
+    km = KMeans(n_clusters=K)
     km.fit(data_values)
     labels = km.labels_
     results = pandas.DataFrame([data.index, labels]).T
@@ -50,7 +37,7 @@ def find_K(dataframe):
     plt.plot(K_array, distance_array)
     plt.legend(loc='best')
     plt.xlabel("K(numebr of clusters)")
-    plt.ylabel("Average within cluster distance to centroid")
+    plt.ylabel("WCSS")
     #plt.show()
     plt.savefig('./elbow_point.pdf', bbox_inches='tight')
     plt.close()
@@ -96,8 +83,8 @@ def main():
 
     dataframe = rename_column(dataframe)
     store_data(dataframe)
-    #find_K(dataframe)
-    results = apply_k_means_with_elbw_point(dataframe, 20)
+    find_K(dataframe)
+    results = apply_k_means_with_elbw_point(dataframe, 15)
     results.to_csv("result.csv")
 
 if __name__ == '__main__':
